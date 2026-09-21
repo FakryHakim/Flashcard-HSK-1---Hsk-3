@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>字卡 · Kartu HSK 1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Font hanzi dimuat dengan display=block agar tidak terjadi "font swap ganda" (karakter dobel/pudar) saat halaman baru dibuka -->
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@700&display=block" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #F1E8D6;
+    --paper-2: #E9DCC0;
+    --ink: #201D18;
+    --ink-soft: #5B5344;
+    --seal: #AE3428;
+    --seal-dark: #8A281F;
+    --bamboo: #4B6A4A;
+    --gold: #B8912E;
+    --line: rgba(32,29,24,0.14);
+    --ok: #4B6A4A;
+    --bad: #AE3428;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at top left, rgba(184,145,46,0.08), transparent 55%),
+      radial-gradient(ellipse at bottom right, rgba(174,52,40,0.06), transparent 55%),
+      var(--paper);
+    background-attachment:fixed;
+    color:var(--ink);
+    font-family:'Noto Sans SC','Inter',sans-serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:32px 16px 60px;
+    position:relative;
+  }
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 38px, rgba(32,29,24,0.025) 39px),
+      repeating-linear-gradient(90deg, transparent, transparent 38px, rgba(32,29,24,0.02) 39px);
+    pointer-events:none;
+  }
+
+  .topbar{
+    width:100%; max-width:920px;
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:6px; position:relative; z-index:1;
+  }
+  .brand{ display:flex; align-items:baseline; gap:12px; }
+  .brand .glyph{
+    font-family:'Microsoft YaHei','PingFang SC','Noto Sans SC',sans-serif; font-weight:700; font-size:34px; color:var(--seal);
+    line-height:1;
+  }
+  .brand h1{
+    font-family:'Noto Serif SC'; font-weight:600; font-size:20px; margin:0;
+    letter-spacing:0.02em; color:var(--ink);
+  }
+  .brand small{ display:block; font-size:11px; color:var(--ink-soft); letter-spacing:0.08em; text-transform:uppercase; margin-top:2px;}
+  .level-tag{
+    font-family:'JetBrains Mono'; font-size:12px; color:var(--ink-soft);
+    border:1px solid var(--line); padding:5px 10px; border-radius:2px;
+    background:rgba(255,255,255,0.35);
+  }
+  .level-switch{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .level-btn{
+    font-family:'JetBrains Mono'; font-weight:600; font-size:12px; color:var(--ink-soft);
+    border:1px solid var(--line); padding:6px 14px; border-radius:2px;
+    background:rgba(255,255,255,0.35); cursor:pointer; transition:all .15s;
+  }
+  .level-btn:hover{ border-color:var(--gold); color:var(--ink); }
+  .level-btn.active{ background:var(--ink); color:var(--paper); border-color:var(--ink); }
+  .level-label{
+    font-family:'JetBrains Mono'; font-size:11px; color:var(--ink-soft); letter-spacing:0.04em;
+  }
+
+  .scroll-track{
+    width:100%; max-width:920px;
+    display:flex; align-items:center; gap:10px;
+    margin:22px 0 26px; position:relative; z-index:1;
+  }
+  .scroll-track .rod{
+    flex:0 0 auto; width:8px; height:34px; border-radius:4px;
+    background:linear-gradient(180deg, var(--gold), #8f6f1f);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.25);
+  }
+  .track-line{
+    position:relative; flex:1; height:3px; background:var(--line); border-radius:2px; overflow:hidden;
+  }
+  .track-fill{
+    position:absolute; left:0; top:0; bottom:0; width:0%;
+    background:linear-gradient(90deg, var(--bamboo), var(--gold));
+    transition:width .35s ease;
+  }
+  .track-count{
+    font-family:'JetBrains Mono'; font-size:12px; color:var(--ink-soft); white-space:nowrap;
+  }
+
+  .stage{
+    width:100%; max-width:920px; position:relative; z-index:1;
+  }
+
+  .card{
+    background: #FBF6EA;
+    border:1px solid var(--line);
+    border-radius:6px;
+    box-shadow: 0 18px 40px -20px rgba(32,29,24,0.35), 0 2px 0 rgba(255,255,255,0.6) inset;
+    padding:38px clamp(18px,4vw,48px) 30px;
+    position:relative;
+    overflow:hidden;
+  }
+  .card::before{
+    content:""; position:absolute; top:0; left:0; right:0; height:5px;
+    background:repeating-linear-gradient(90deg, var(--seal) 0 18px, transparent 18px 26px);
+    opacity:0.55;
+  }
+
+  .card-grid{
+    display:grid;
+    grid-template-columns: 1.05fr 1fr 1fr;
+    gap:26px;
+    align-items:stretch;
+    margin-top:6px;
+  }
+
+  .pane{ display:flex; flex-direction:column; gap:10px; min-width:0; }
+  .pane-label{
+    font-family:'JetBrains Mono'; font-size:11px; letter-spacing:0.12em; text-transform:uppercase;
+    color:var(--ink-soft); display:flex; align-items:center; gap:6px;
+  }
+  .pane-label .num{
+    color:var(--seal); font-weight:600;
+  }
+
+  .hanzi-well{
+    flex:1; display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--line);
+    background:
+      radial-gradient(circle at 30% 20%, rgba(174,52,40,0.05), transparent 60%),
+      #FFFDF7;
+    border-radius:4px; min-height:180px; position:relative;
+  }
+  .hanzi-well .seal-ring{
+    position:absolute; top:10px; right:10px; width:26px; height:26px;
+    border:1.5px solid var(--seal); border-radius:3px; opacity:0.35;
+  }
+  .hanzi{
+    font-family:'Microsoft YaHei','PingFang SC','Noto Sans SC',sans-serif; font-weight:700; color:var(--ink);
+    font-size:clamp(56px,9vw,84px); line-height:1;
+    text-align:center;
+  }
+
+  .field{
+    flex:1; display:flex; flex-direction:column; gap:8px;
+  }
+  input.answer{
+    width:100%; padding:16px 14px; font-size:19px;
+    font-family:'JetBrains Mono';
+    background:#FFFDF7; border:1.5px solid var(--line); border-radius:4px;
+    color:var(--ink); outline:none;
+    transition:border-color .15s, box-shadow .15s, background .15s;
+    min-height:64px;
+  }
+  input.answer::placeholder{ color:#B4A98F; font-family:'Noto Sans SC'; font-size:14px;}
+  input.answer:focus{
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(184,145,46,0.15);
+  }
+  input.answer.correct{ border-color:var(--ok); background:#F3F7EE; color:var(--ok); }
+  input.answer.wrong{ border-color:var(--bad); background:#FBF0EE; color:var(--bad); }
+
+  .reveal-line{
+    font-size:12.5px; color:var(--ink-soft); min-height:16px; font-family:'Noto Sans SC';
+  }
+  .reveal-line b{ color:var(--ink); font-weight:600; font-family:'JetBrains Mono'; }
+
+  .meaning-note{
+    font-size:11px; color:#A99A78;
+  }
+
+  .controls{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:12px; margin-top:30px; flex-wrap:wrap;
+  }
+  .btn-group{ display:flex; gap:10px; flex-wrap:wrap; }
+  button{
+    font-family:'Noto Sans SC'; font-weight:500; font-size:14px;
+    border:1.5px solid var(--ink); background:transparent; color:var(--ink);
+    padding:11px 20px; border-radius:3px; cursor:pointer;
+    transition: all .15s;
+  }
+  button:hover{ background:var(--ink); color:var(--paper); }
+  button.primary{
+    background:var(--seal); border-color:var(--seal); color:#FBF6EA;
+  }
+  button.primary:hover{ background:var(--seal-dark); border-color:var(--seal-dark); }
+  button:disabled{ opacity:0.35; cursor:default; }
+  button:disabled:hover{ background:transparent; color:var(--ink); }
+  button.ghost{ border-color:var(--line); color:var(--ink-soft); }
+  button.ghost:hover{ background:var(--ink-soft); border-color:var(--ink-soft); color:#FBF6EA; }
+
+  .score{
+    font-family:'JetBrains Mono'; font-size:13px; color:var(--ink-soft);
+    display:flex; align-items:center; gap:14px;
+  }
+  .score .stamp{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:22px; height:22px; border:1.5px solid var(--bamboo); color:var(--bamboo);
+    border-radius:3px; font-weight:700; font-size:12px;
+    transform:rotate(-6deg);
+  }
+
+  .feedback-banner{
+    position:absolute; top:16px; left:50%; transform:translateX(-50%) translateY(-8px);
+    font-family:'Microsoft YaHei','PingFang SC','Noto Sans SC',sans-serif; font-weight:600; font-size:13px;
+    padding:6px 16px; border-radius:20px; opacity:0; pointer-events:none;
+    transition: opacity .2s, transform .2s;
+    letter-spacing:0.04em;
+  }
+  .feedback-banner.show{ opacity:1; transform:translateX(-50%) translateY(0); }
+  .feedback-banner.ok{ background:rgba(75,106,74,0.12); color:var(--bamboo); border:1px solid rgba(75,106,74,0.3); }
+  .feedback-banner.bad{ background:rgba(174,52,40,0.1); color:var(--seal); border:1px solid rgba(174,52,40,0.28); }
+
+  footer{
+    margin-top:26px; font-size:11.5px; color:#A99A78; text-align:center; max-width:600px;
+    line-height:1.6; position:relative; z-index:1;
+  }
+
+  /* ---- Mode tabs ---- */
+  .mode-tabs{
+    width:100%; max-width:920px;
+    display:flex; gap:8px; margin:18px 0 0; position:relative; z-index:1;
+  }
+  .tab-btn{
+    flex:1; display:flex; align-items:center; justify-content:center; gap:8px;
+    padding:12px 16px; border:1.5px solid var(--line); border-bottom:none;
+    background:rgba(255,255,255,0.35);
+    border-radius:5px 5px 0 0; cursor:pointer;
+    font-family:'Noto Sans SC'; font-weight:500; font-size:14px;
+    color:var(--ink-soft); transition:all .15s;
+  }
+  .tab-btn .tab-glyph{
+    font-family:'Microsoft YaHei','PingFang SC','Noto Sans SC',sans-serif; font-weight:700; color:inherit;
+  }
+  .tab-btn.active{
+    background:#FBF6EA; color:var(--seal);
+    box-shadow: 0 -2px 0 var(--seal) inset;
+  }
+  .tab-btn:not(.active):hover{ background:rgba(255,255,255,0.6); color:var(--ink); }
+
+  /* ---- Dictionary / memorization view ---- */
+  #quizView, #dictView{ width:100%; max-width:920px; position:relative; z-index:1; }
+
+  .dict-detail{ margin-bottom:22px; }
+  .dict-detail-top{ display:flex; gap:28px; align-items:center; flex-wrap:wrap; }
+  .dict-hanzi-block{ position:relative; flex:0 0 auto; }
+  .dict-hanzi{
+    font-family:'Microsoft YaHei','PingFang SC','Noto Sans SC',sans-serif; font-weight:700;
+    font-size:clamp(60px,9vw,88px); line-height:1; color:var(--ink);
+    border:1px solid var(--line); background:#FFFDF7; border-radius:4px;
+    min-width:150px; height:150px; padding:0 16px;
+    display:inline-flex; align-items:center; justify-content:center;
+    white-space:nowrap;
+  }
+  .dict-pinyin-row{ display:flex; align-items:center; gap:12px; }
+  .speak-btn{
+    flex:0 0 auto; width:32px; height:32px; border-radius:50%;
+    border:1.5px solid var(--seal); background:#FBF6EA; color:var(--seal);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:14px;
+    transition:all .15s; padding:0;
+  }
+  .speak-btn:hover{ background:var(--seal); color:#FBF6EA; }
+  .dict-info{ flex:1; min-width:200px; display:flex; flex-direction:column; gap:8px; }
+  .dict-pinyin{ font-family:'JetBrains Mono'; font-size:26px; color:var(--gold); font-weight:600; }
+  .dict-meaning{ font-size:18px; color:var(--ink); line-height:1.4; }
+  .dict-index{ font-family:'JetBrains Mono'; font-size:11.5px; color:var(--ink-soft); }
+
+  .dict-write-section{ margin-top:26px; border-top:1px solid var(--line); padding-top:18px; }
+  .writer-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+  .writer-target{
+    width:92px; height:92px; border:1px solid var(--line); border-radius:4px; background:#FFFDF7;
+    flex:0 0 auto;
+  }
+  .writer-empty{ font-size:13px; color:var(--ink-soft); }
+
+  .dict-nav{ margin-top:24px; }
+
+  .dict-toolbar{
+    width:100%; display:flex; align-items:center; justify-content:space-between; gap:12px;
+    margin-bottom:12px; flex-wrap:wrap;
+  }
+  #dictSearch{
+    flex:1; min-width:200px; padding:11px 14px; font-size:14px; font-family:'Noto Sans SC';
+    border:1.5px solid var(--line); border-radius:4px; background:#FFFDF7; color:var(--ink); outline:none;
+  }
+  #dictSearch::placeholder{ color:#B4A98F; }
+  #dictSearch:focus{ border-color:var(--gold); box-shadow:0 0 0 3px rgba(184,145,46,0.15); }
+
+  .dict-grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(84px,1fr)); gap:8px;
+    max-height:420px; overflow-y:auto; padding:10px;
+    border:1px solid var(--line); border-radius:5px; background:rgba(255,255,255,0.3);
+  }
+  .dict-tile{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px;
+    padding:10px 4px; border:1px solid var(--line); border-radius:4px; background:#FFFDF7;
+    cursor:pointer; transition:all .15s;
+  }
+  .dict-tile:hover{ border-color:var(--gold); }
+  .dict-tile.active{ border-color:var(--seal); background:rgba(174,52,40,0.07); }
+  .tile-hanzi{
+    font-family:'Microsoft YaHei','PingFang SC','Noto Sans SC',sans-serif; font-weight:700;
+    font-size:21px; color:var(--ink); line-height:1;
+  }
+  .tile-pinyin{ font-family:'JetBrains Mono'; font-size:10px; color:var(--ink-soft); }
+
+  @media (max-width: 720px){
+    .card-grid{ grid-template-columns:1fr; gap:16px; }
+    .hanzi-well{ min-height:130px; }
+    .hanzi{ font-size:64px; }
+    .controls{ flex-direction:column; align-items:stretch; }
+    .btn-group{ justify-content:stretch; }
+    .btn-group button{ flex:1; }
+    .dict-detail-top{ flex-direction:column; align-items:flex-start; }
+    .dict-hanzi{ min-width:120px; height:120px; font-size:60px; padding:0 12px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="brand">
+      <span class="glyph">字</span>
+      <div>
+        <h1>Kartu Hanzi</h1>
+        <small>Latihan Kosakata Mandarin</small>
+      </div>
+    </div>
+    <div class="level-switch" id="levelSwitch">
+      <button class="level-btn active" data-level="hsk1" type="button">HSK 1</button>
+      <button class="level-btn" data-level="hsk2" type="button">HSK 2</button>
+      <button class="level-btn" data-level="hsk3" type="button">HSK 3</button>
+      <span class="level-label" id="levelLabel">150 KATA</span>
+    </div>
+  </div>
+
+  <div class="mode-tabs">
+    <button class="tab-btn active" id="tabQuiz" type="button"><span class="tab-glyph">练</span> Latihan</button>
+    <button class="tab-btn" id="tabDict" type="button"><span class="tab-glyph">典</span> Kamus Hafalan</button>
+  </div>
+
+  <div id="quizView">
+  <div class="scroll-track">
+    <div class="rod"></div>
+    <div class="track-line"><div class="track-fill" id="trackFill"></div></div>
+    <div class="track-count" id="trackCount">1 / 150</div>
+  </div>
+
+  <div class="stage">
+    <div class="card">
+      <div class="feedback-banner" id="feedbackBanner"></div>
+      <div class="card-grid">
+        <div class="pane">
+          <div class="pane-label"><span class="num">壹</span> HANZI</div>
+          <div class="hanzi-well">
+            <div class="seal-ring"></div>
+            <div class="hanzi" id="hanziDisplay">你</div>
+          </div>
+        </div>
+        <div class="pane">
+          <div class="pane-label"><span class="num">贰</span> PINYIN</div>
+          <input type="text" class="answer" id="pinyinInput" placeholder="tulis pinyin di sini..." autocomplete="off">
+          <div class="reveal-line" id="pinyinReveal">&nbsp;</div>
+        </div>
+        <div class="pane">
+          <div class="pane-label"><span class="num">叁</span> ARTI</div>
+          <input type="text" class="answer" id="meaningInput" placeholder="tulis artinya di sini..." autocomplete="off">
+          <div class="reveal-line" id="meaningReveal">&nbsp;</div>
+          <div class="meaning-note">Bahasa Indonesia</div>
+        </div>
+      </div>
+
+      <div class="controls">
+        <div class="btn-group">
+          <button class="ghost" id="prevBtn">← Sebelumnya</button>
+          <button class="primary" id="checkBtn">Periksa Jawaban</button>
+          <button id="nextBtn">Selanjutnya →</button>
+        </div>
+        <div class="score">
+          <span class="stamp" id="scoreStamp">0</span>
+          <span id="scoreText">benar dari 0 dicoba</span>
+          <button class="ghost" id="shuffleBtn" style="padding:8px 14px; font-size:12px;">Acak</button>
+          <button class="ghost" id="resetBtn" style="padding:8px 14px; font-size:12px;">Ulangi</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Tekan <b>Enter</b> untuk memeriksa jawaban, lalu Enter lagi untuk lanjut ke kartu berikutnya.
+    Pencocokan pinyin mengabaikan tanda nada dan huruf besar/kecil.
+  </footer>
+  </div>
+
+  <div id="dictView" style="display:none;">
+    <div class="dict-detail card">
+      <div class="dict-detail-top">
+        <div class="dict-hanzi-block">
+          <div class="dict-hanzi" id="dictHanzi">你</div>
+        </div>
+        <div class="dict-info">
+          <div class="dict-pinyin-row">
+            <div class="dict-pinyin" id="dictPinyin">nǐ</div>
+            <button class="speak-btn" id="dictSpeakBtn" type="button" title="Dengarkan pelafalan">🔊</button>
+          </div>
+          <div class="dict-meaning" id="dictMeaning">kamu</div>
+          <div class="dict-index" id="dictIndex">Kata 1 dari 150</div>
+        </div>
+      </div>
+
+      <div class="dict-write-section">
+        <div class="pane-label"><span class="num">叁</span> CARA MENULIS</div>
+        <div class="writer-row" id="writerRow"></div>
+        <button class="ghost" id="replayWriteBtn" type="button" style="margin-top:12px;">↻ Putar Ulang Animasi</button>
+      </div>
+
+      <div class="controls dict-nav">
+        <div class="btn-group">
+          <button class="ghost" id="dictPrevBtn" type="button">← Sebelumnya</button>
+          <button id="dictNextBtn" type="button">Selanjutnya →</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="dict-toolbar">
+      <input type="text" id="dictSearch" placeholder="Cari hanzi, pinyin, atau arti..." autocomplete="off">
+      <span class="track-count" id="dictCount">150 kata</span>
+    </div>
+    <div class="dict-grid" id="dictGrid"></div>
+
+    <footer>
+      Klik salah satu kartu di bawah untuk melihat urutan cara menulisnya dan mendengar pelafalannya.
+      Tombol suara memakai fitur bawaan browser (Web Speech API); kualitas dan ketersediaannya tergantung perangkat.
+    </footer>
+  </div>
+
+<script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.7.2/dist/hanzi-writer.min.js"></script>
+<script>
+const WORDS_HSK1 = [
+["爱","ài","cinta, mencintai"],
+["吧","ba","(partikel akhir kalimat untuk saran/perintah halus)"],
+["八","bā","delapan"],
+["爸爸","bàba","ayah"],
+["百","bǎi","seratus"],
+["白天","báitiān","siang hari, waktu siang"],
+["半","bàn","setengah"],
+["包子","bāozi","bakpao"],
+["杯子","bēizi","gelas, cangkir"],
+["本","běn","(kata satuan untuk buku)"],
+["边","biān","sisi, tepi, pinggir"],
+["病","bìng","sakit, penyakit"],
+["不","bù","tidak, bukan"],
+["不客气","bú kèqi","sama-sama, tidak usah sungkan"],
+["不要","búyào","jangan"],
+["菜","cài","masakan, sayuran"],
+["茶","chá","teh"],
+["唱","chàng","menyanyi"],
+["超市","chāoshì","supermarket"],
+["车","chē","kendaraan, mobil"],
+["吃","chī","makan"],
+["穿","chuān","memakai, mengenakan"],
+["出租车","chūzūchē","taksi"],
+["大","dà","besar"],
+["打电话","dǎ diànhuà","menelepon"],
+["大家","dàjiā","semua orang"],
+["到","dào","tiba, sampai"],
+["大学","dàxué","universitas"],
+["大学生","dàxuéshēng","mahasiswa"],
+["的","de","(partikel kepemilikan)"],
+["第","dì","(awalan bilangan tingkat, spt pertama, kedua)"],
+["店","diàn","toko"],
+["点","diǎn","jam, titik"],
+["电话","diànhuà","telepon"],
+["电脑","diànnǎo","komputer"],
+["电视","diànshì","televisi"],
+["电影","diànyǐng","film"],
+["电影院","diànyǐngyuàn","bioskop"],
+["弟弟","dìdi","adik laki-laki"],
+["东西","dōngxi","barang, benda"],
+["都","dōu","semua"],
+["读","dú","membaca"],
+["对","duì","benar, terhadap"],
+["对不起","duìbuqǐ","maaf"],
+["多","duō","banyak"],
+["多少","duōshao","berapa"],
+["读书","dúshū","membaca buku, belajar"],
+["二","èr","dua"],
+["儿子","érzi","anak laki-laki"],
+["饭","fàn","nasi, makanan"],
+["饭店","fàndiàn","restoran, hotel"],
+["房间","fángjiān","kamar"],
+["非常","fēicháng","sangat"],
+["飞机","fēijī","pesawat terbang"],
+["分","fēn","menit, sen"],
+["分钟","fēnzhōng","menit"],
+["高兴","gāoxìng","senang"],
+["个","gè","(kata satuan umum)"],
+["歌","gē","lagu"],
+["哥哥","gēge","kakak laki-laki"],
+["给","gěi","memberi, untuk"],
+["公司","gōngsī","perusahaan"],
+["工作","gōngzuò","pekerjaan, bekerja"],
+["狗","gǒu","anjing"],
+["贵","guì","mahal"],
+["国","guó","negara"],
+["还","hái","masih"],
+["孩子","háizi","anak"],
+["汉语","Hànyǔ","bahasa Mandarin"],
+["汉字","Hànzì","aksara Tionghoa"],
+["号","hào","nomor, tanggal"],
+["好","hǎo","baik"],
+["好吃","hǎochī","enak"],
+["好看","hǎokàn","bagus, cantik dipandang"],
+["好听","hǎotīng","enak didengar"],
+["好玩儿","hǎowánr","seru, menyenangkan"],
+["和","hé","dan"],
+["喝","hē","minum"],
+["很","hěn","sangat"],
+["后","hòu","belakang, setelah"],
+["回","huí","pulang, kembali"],
+["会","huì","bisa"],
+["火车","huǒchē","kereta api"],
+["几","jǐ","berapa, beberapa"],
+["家","jiā","rumah, keluarga"],
+["见","jiàn","bertemu, melihat"],
+["件","jiàn","(kata satuan untuk pakaian)"],
+["叫","jiào","dipanggil, berteriak"],
+["饺子","jiǎozi","pangsit (jiaozi)"],
+["家人","jiārén","anggota keluarga"],
+["鸡蛋","jīdàn","telur ayam"],
+["姐姐","jiějie","kakak perempuan"],
+["今年","jīnnián","tahun ini"],
+["今天","jīntiān","hari ini"],
+["九","jiǔ","sembilan"],
+["觉得","juéde","merasa, menurut"],
+["开","kāi","membuka, mengemudi"],
+["开车","kāichē","menyetir mobil"],
+["看","kàn","melihat"],
+["看病","kànbìng","berobat ke dokter"],
+["看见","kànjiàn","melihat"],
+["课","kè","pelajaran"],
+["可以","kěyǐ","bisa, boleh"],
+["口","kǒu","mulut"],
+["块","kuài","keping, yuan"],
+["来","lái","datang"],
+["老师","lǎoshī","guru"],
+["了","le","(partikel penunjuk perubahan/selesai)"],
+["冷","lěng","dingin"],
+["里","lǐ","dalam"],
+["两","liǎng","dua"],
+["零","líng","nol"],
+["六","liù","enam"],
+["吗","ma","(partikel tanya)"],
+["卖","mài","menjual"],
+["买","mǎi","membeli"],
+["妈妈","māma","ibu"],
+["忙","máng","sibuk"],
+["猫","māo","kucing"],
+["没关系","méi guānxi","tidak apa-apa"],
+["妹妹","mèimei","adik perempuan"],
+["没事","méishì","tidak apa-apa, tidak masalah"],
+["没(有)","méi(yǒu)","tidak ada, tidak punya"],
+["们","men","(penanda jamak)"],
+["面包","miànbāo","roti"],
+["面条儿","miàntiáor","mie"],
+["米饭","mǐfàn","nasi"],
+["明年","míngnián","tahun depan"],
+["明天","míngtiān","besok"],
+["名字","míngzi","nama"],
+["那","nà","itu"],
+["哪","nǎ","yang mana"],
+["那边","nàbiān","di sana"],
+["那个","nàge","itu"],
+["哪个","nǎge","yang mana"],
+["那里","nàlǐ","di sana"],
+["哪里","nǎlǐ","di mana"],
+["男","nán","laki-laki"],
+["男朋友","nánpéngyou","pacar laki-laki"],
+["那儿","nàr","di sana"],
+["哪儿","nǎr","di mana"],
+["那些","nàxiē","itu (jamak)"],
+["哪些","nǎxiē","yang mana (jamak)"],
+["呢","ne","(partikel tanya)"],
+["能","néng","bisa, mampu"],
+["你","nǐ","kamu"],
+["你好","nǐ hǎo","halo"],
+["年","nián","tahun"],
+["你们","nǐmen","kalian"],
+["您","nín","Anda"],
+["牛奶","niúnǎi","susu"],
+["女","nǚ","perempuan"],
+["女儿","nǚ'ér","anak perempuan"],
+["女朋友","nǚpéngyou","pacar perempuan"],
+["女士","nǚshì","nona, nyonya"],
+["朋友","péngyou","teman"],
+["便宜","piányi","murah"],
+["漂亮","piàoliang","cantik"],
+["苹果","píngguǒ","apel"],
+["七","qī","tujuh"],
+["前","qián","depan"],
+["钱","qián","uang"],
+["千","qiān","ribu"],
+["起床","qǐchuáng","bangun tidur"],
+["请","qǐng","silakan, mengundang"],
+["请问","qǐngwèn","permisi, boleh saya bertanya"],
+["去","qù","pergi"],
+["去年","qùnián","tahun lalu"],
+["热","rè","panas"],
+["人","rén","orang"],
+["认识","rènshi","mengenal"],
+["日","rì","hari, matahari"],
+["三","sān","tiga"],
+["上","shàng","atas"],
+["上班","shàngbān","bekerja"],
+["商店","shāngdiàn","toko"],
+["上课","shàngkè","masuk kelas"],
+["上午","shàngwǔ","pagi"],
+["上学","shàngxué","bersekolah"],
+["少","shǎo","sedikit"],
+["谁","shéi","siapa"],
+["生病","shēngbìng","sakit"],
+["什么","shénme","apa"],
+["十","shí","sepuluh"],
+["事","shì","urusan, hal"],
+["是","shì","adalah"],
+["时候","shíhou","waktu, saat"],
+["时间","shíjiān","waktu"],
+["手机","shǒujī","telepon genggam"],
+["书","shū","buku"],
+["书店","shūdiàn","toko buku"],
+["睡","shuì","tidur"],
+["水","shuǐ","air"],
+["水果","shuǐguǒ","buah"],
+["睡觉","shuìjiào","tidur"],
+["说","shuō","berbicara"],
+["说话","shuōhuà","berbicara"],
+["四","sì","empat"],
+["岁","suì","tahun (usia)"],
+["他","tā","dia (laki-laki)"],
+["它","tā","dia (benda/hewan)"],
+["她","tā","dia (perempuan)"],
+["太","tài","terlalu, sangat"],
+["他们","tāmen","mereka"],
+["它们","tāmen","mereka (benda/hewan)"],
+["她们","tāmen","mereka (perempuan)"],
+["天","tiān","langit, hari"],
+["天气","tiānqì","cuaca"],
+["听","tīng","mendengarkan"],
+["听见","tīngjiàn","mendengar"],
+["同学","tóngxué","teman sekelas"],
+["外","wài","luar"],
+["外边","wàibian","di luar"],
+["玩","wán","bermain"],
+["晚","wǎn","larut, malam"],
+["晚饭","wǎnfàn","makan malam"],
+["晚上","wǎnshang","malam"],
+["喂","wèi","halo (di telepon)"],
+["问","wèn","bertanya"],
+["问题","wèntí","pertanyaan, masalah"],
+["我","wǒ","saya"],
+["我们","wǒmen","kami, kita"],
+["五","wǔ","lima"],
+["午饭","wǔfàn","makan siang"],
+["下","xià","bawah"],
+["下雨","xià yǔ","hujan"],
+["下班","xiàbān","pulang kerja"],
+["下课","xiàkè","selesai kelas"],
+["想","xiǎng","berpikir, merindukan"],
+["先生","xiānsheng","tuan, bapak"],
+["现在","xiànzài","sekarang"],
+["小","xiǎo","kecil"],
+["小朋友","xiǎopéngyǒu","anak kecil"],
+["小时","xiǎoshí","jam"],
+["小学","xiǎoxué","sekolah dasar"],
+["小学生","xiǎoxuéshēng","siswa sekolah dasar"],
+["下午","xiàwǔ","sore"],
+["写","xiě","menulis"],
+["些","xiē","beberapa"],
+["谢谢","xièxie","terima kasih"],
+["喜欢","xǐhuan","suka"],
+["新","xīn","baru"],
+["星期","xīngqī","minggu"],
+["星期日","xīngqīrì","hari Minggu"],
+["星期天","xīngqītiān","hari Minggu"],
+["休息","xiūxi","istirahat"],
+["学","xué","belajar"],
+["雪","xuě","salju"],
+["学生","xuéshēng","murid"],
+["学习","xuéxí","belajar"],
+["学校","xuéxiào","sekolah"],
+["要","yào","mau, ingin"],
+["也","yě","juga"],
+["一","yī","satu"],
+["一半","yíbàn","setengah"],
+["一点儿","yìdiǎnr","sedikit"],
+["衣服","yīfu","pakaian"],
+["医生","yīshēng","dokter"],
+["一下","yíxià","sebentar"],
+["一些","yìxiē","beberapa"],
+["医院","yīyuàn","rumah sakit"],
+["椅子","yǐzi","kursi"],
+["有","yǒu","punya, ada"],
+["有的","yǒude","sebagian"],
+["有些","yǒuxiē","sebagian, beberapa"],
+["有(一)点儿","yǒu(yì)diǎnr","agak, sedikit"],
+["雨","yǔ","hujan"],
+["元","yuán","yuan (mata uang)"],
+["月","yuè","bulan"],
+["再","zài","lagi"],
+["在","zài","di, berada di"],
+["再见","zàijiàn","sampai jumpa"],
+["早","zǎo","pagi, awal"],
+["早饭","zǎofàn","sarapan"],
+["早上","zǎoshang","pagi"],
+["怎么","zěnme","bagaimana"],
+["怎么样","zěnmeyàng","bagaimana"],
+["找","zhǎo","mencari"],
+["这","zhè","ini"],
+["这边","zhèbiān","di sini"],
+["这个","zhège","ini"],
+["这里","zhèlǐ","di sini"],
+["真","zhēn","sungguh, benar-benar"],
+["正在","zhèngzài","sedang"],
+["这儿","zhèr","di sini"],
+["这些","zhèxiē","ini (jamak)"],
+["只","zhī","hanya"],
+["知道","zhīdào","tahu"],
+["中国","Zhōngguó","Tiongkok"],
+["中文","Zhōngwén","bahasa Mandarin (tulisan)"],
+["中午","zhōngwǔ","siang hari"],
+["中学","zhōngxué","sekolah menengah"],
+["中学生","zhōngxuéshēng","siswa sekolah menengah"],
+["住","zhù","tinggal"],
+["桌子","zhuōzi","meja"],
+["字","zì","huruf, aksara"],
+["坐","zuò","duduk"],
+["做","zuò","melakukan, membuat"],
+["做饭","zuò fàn","memasak"],
+["昨天","zuótiān","kemarin"]
+];
+
+const WORDS_HSK2 = [
+["啊","a","(partikel seru) ah, oh"],
+["爱好","àihào","hobi, minat"],
+["白色","báisè","warna putih"],
+["班","bān","kelas, regu, shift"],
+["帮","bāng","membantu"],
+["帮忙","bāngmáng","membantu, menolong"],
+["包","bāo","tas, membungkus"],
+["本子","běnzi","buku catatan"],
+["比","bǐ","membandingkan, dibandingkan dengan"],
+["笔","bǐ","pena"],
+["别","bié","jangan, lain"],
+["不好意思","bù hǎoyìsi","maaf, malu"],
+["不错","búcuò","lumayan bagus"],
+["长","cháng","panjang"],
+["车站","chēzhàn","stasiun, halte"],
+["出","chū","keluar"],
+["床","chuáng","ranjang"],
+["出国","chūguó","pergi ke luar negeri"],
+["出来","chūlái","keluar"],
+["出门","chūmén","keluar rumah"],
+["出去","chūqù","pergi keluar"],
+["词","cí","kata"],
+["次","cì","kali (frekuensi)"],
+["从","cóng","dari, sejak"],
+["从小","cóngxiǎo","sejak kecil"],
+["错","cuò","salah, kesalahan"],
+["打","dǎ","memukul"],
+["打车","dǎchē","naik taksi"],
+["打开","dǎkāi","membuka"],
+["但","dàn","tapi"],
+["但是","dànshì","tetapi"],
+["得","de","(partikel struktural pelengkap kata kerja)"],
+["地","de","(partikel struktural kata keterangan)"],
+["等","děng","menunggu"],
+["点","diǎn","sedikit"],
+["地铁","dìtiě","kereta bawah tanah"],
+["动","dòng","bergerak"],
+["懂","dǒng","mengerti"],
+["饭馆","fànguǎn","rumah makan"],
+["飞","fēi","terbang"],
+["高","gāo","tinggi"],
+["告诉","gàosu","memberi tahu"],
+["高中","gāozhōng","SMA"],
+["跟","gēn","dengan, mengikuti"],
+["个子","gèzi","tinggi badan"],
+["公交车","gōngjiāochē","bus"],
+["过","guo","(partikel penunjuk pernah)"],
+["过","guò","merayakan, melewati"],
+["过来","guòlái","datang kemari"],
+["过年","guònián","merayakan tahun baru"],
+["过去","guòqù","masa lalu"],
+["还是","háishi","atau, masih"],
+["黑色","hēisè","warna hitam"],
+["红茶","hóngchá","teh hitam"],
+["红色","hóngsè","warna merah"],
+["后面","hòumiàn","belakang"],
+["画","huà","menggambar, lukisan"],
+["花","huā","bunga"],
+["花","huā","menghabiskan (uang/waktu)"],
+["坏","huài","rusak, buruk"],
+["回来","huílái","kembali"],
+["回去","huíqù","pulang kembali"],
+["间","jiān","(kata satuan ruangan), antara"],
+["教","jiāo","mengajar"],
+["教室","jiàoshì","ruang kelas"],
+["机场","jīchǎng","bandara"],
+["记得","jìde","ingat"],
+["介绍","jièshào","memperkenalkan"],
+["进","jìn","masuk"],
+["近","jìn","dekat"],
+["经常","jīngcháng","sering"],
+["进来","jìnlái","masuk"],
+["进去","jìnqù","masuk ke dalam"],
+["机票","jīpiào","tiket pesawat"],
+["就","jiù","lalu, langsung"],
+["酒店","jiǔdiàn","hotel"],
+["咖啡","kāfēi","kopi"],
+["开始","kāishǐ","mulai"],
+["开学","kāixué","masuk sekolah"],
+["考","kǎo","mengikuti ujian"],
+["考试","kǎoshì","ujian"],
+["可能","kěnéng","mungkin"],
+["快","kuài","cepat"],
+["快乐","kuàilè","bahagia"],
+["快要","kuàiyào","akan segera"],
+["裤子","kùzi","celana"],
+["篮球","lánqiú","bola basket"],
+["累","lèi","lelah"],
+["离","lí","dari, jauh dari"],
+["里面","lǐmiàn","di dalam"],
+["楼","lóu","gedung, lantai"],
+["路","lù","jalan"],
+["绿茶","lǜchá","teh hijau"],
+["绿色","lǜsè","warna hijau"],
+["路上","lùshang","di jalan"],
+["旅游","lǚyóu","berwisata"],
+["慢","màn","lambat"],
+["每","měi","setiap"],
+["没意思","méi yìsi","membosankan"],
+["门","mén","pintu"],
+["门口","ménkǒu","pintu masuk"],
+["门票","ménpiào","tiket masuk"],
+["面","miàn","wajah, permukaan, mi"],
+["名","míng","nama, terkenal"],
+["拿","ná","mengambil, memegang"],
+["奶茶","nǎichá","teh susu"],
+["奶奶","nǎinai","nenek (dari pihak ayah)"],
+["那么","nàme","begitu, seperti itu"],
+["男孩儿","nánháir","anak laki-laki"],
+["那样","nàyàng","seperti itu"],
+["鸟","niǎo","burung"],
+["女孩儿","nǚháir","anak perempuan"],
+["旁边","pángbiān","di samping"],
+["跑","pǎo","berlari"],
+["跑步","pǎobù","lari, jogging"],
+["票","piào","tiket"],
+["前面","qiánmiàn","depan"],
+["起来","qǐlái","bangun, (pelengkap arah ke atas)"],
+["晴","qíng","cerah"],
+["球","qiú","bola"],
+["妻子","qīzi","istri"],
+["让","ràng","membiarkan, mengizinkan"],
+["肉","ròu","daging"],
+["商场","shāngchǎng","mal, pusat perbelanjaan"],
+["上来","shànglái","naik ke atas"],
+["上面","shàngmiàn","di atas"],
+["上去","shàngqù","naik ke atas"],
+["上网","shàngwǎng","berselancar internet"],
+["生日","shēngrì","ulang tahun"],
+["身体","shēntǐ","tubuh, kesehatan"],
+["时","shí","waktu, saat"],
+["事情","shìqing","urusan, hal"],
+["手","shǒu","tangan"],
+["手表","shǒubiǎo","jam tangan"],
+["书包","shūbāo","tas sekolah"],
+["舒服","shūfu","nyaman, enak badan"],
+["送","sòng","memberi (hadiah), mengantar"],
+["虽然","suīrán","walaupun"],
+["所以","suǒyǐ","maka, sehingga"],
+["疼","téng","sakit, nyeri"],
+["题","tí","soal, pertanyaan"],
+["踢","tī","menendang"],
+["条","tiáo","(kata satuan benda panjang tipis)"],
+["跳舞","tiàowǔ","menari"],
+["头","tóu","kepala"],
+["外国","wàiguó","negara asing"],
+["外面","wàimiàn","di luar"],
+["完","wán","selesai"],
+["万","wàn","sepuluh ribu"],
+["忘","wàng","lupa"],
+["往","wǎng","menuju, ke arah"],
+["网上","wǎngshang","daring, online"],
+["位","wèi","(kata satuan hormat untuk orang)"],
+["为什么","wèi shénme","mengapa"],
+["洗","xǐ","mencuci"],
+["下来","xiàlái","turun"],
+["下面","xiàmiàn","di bawah"],
+["笑","xiào","tertawa, tersenyum"],
+["小孩儿","xiǎoháir","anak kecil"],
+["小时候","xiǎoshíhou","waktu kecil"],
+["下去","xiàqù","turun ke bawah"],
+["姓","xìng","marga"],
+["姓名","xìngmíng","nama lengkap"],
+["洗手间","xǐshǒujiān","kamar mandi"],
+["希望","xīwàng","berharap"],
+["眼睛","yǎnjing","mata"],
+["颜色","yánsè","warna"],
+["药","yào","obat"],
+["药店","yàodiàn","apotek"],
+["爷爷","yéye","kakek (dari pihak ayah)"],
+["一会儿","yíhuìr","sebentar"],
+["已经","yǐjīng","sudah"],
+["阴","yīn","mendung"],
+["因为","yīnwèi","karena"],
+["一起","yìqǐ","bersama-sama"],
+["意思","yìsi","arti, maksud"],
+["游","yóu","berenang, berkelana"],
+["右","yòu","kanan"],
+["有意思","yǒu yìsi","menarik"],
+["右边","yòubian","sebelah kanan"],
+["有时(候)","yǒushí(hou)","kadang-kadang"],
+["游泳","yóuyǒng","berenang"],
+["鱼","yú","ikan"],
+["远","yuǎn","jauh"],
+["运动","yùndòng","olahraga"],
+["站","zhàn","berdiri, stasiun"],
+["丈夫","zhàngfu","suami"],
+["着","zhe","(partikel penunjuk sedang berlangsung)"],
+["这么","zhème","begini"],
+["正","zhèng","tepat, sedang"],
+["这样","zhèyàng","begini, seperti ini"],
+["周","zhōu","minggu (satuan waktu)"],
+["准备","zhǔnbèi","bersiap, persiapan"],
+["自己","zìjǐ","diri sendiri"],
+["走","zǒu","berjalan, pergi"],
+["走路","zǒulù","berjalan kaki"],
+["最","zuì","paling"],
+["左","zuǒ","kiri"],
+["左边","zuǒbian","sebelah kiri"],
+["足球","zúqiú","sepak bola"]
+];
+
+const WORDS_HSK3 = [
+["矮","ǎi","pendek (tinggi badan)"],
+["爱人","àiren","pasangan, suami/istri"],
+["安静","ānjìng","tenang, sepi"],
+["安全","ānquán","aman, keamanan"],
+["阿姨","āyí","bibi, pengasuh"],
+["把","bǎ","(kata depan objek/kata satuan pegangan)"],
+["办","bàn","mengurus, melakukan"],
+["搬","bān","memindahkan"],
+["办法","bànfǎ","cara, metode"],
+["办公室","bàngōngshì","kantor"],
+["帮助","bāngzhù","membantu, bantuan"],
+["班级","bānjí","kelas (kelompok)"],
+["搬家","bānjiā","pindah rumah"],
+["半天","bàntiān","setengah hari, lama sekali"],
+["饱","bǎo","kenyang"],
+["报纸","bàozhǐ","koran"],
+["被","bèi","(penanda pasif) oleh; selimut"],
+["北","běi","utara"],
+["北方","běifāng","bagian utara"],
+["变","biàn","berubah, menjadi"],
+["遍","biàn","(kata satuan untuk kali/pengulangan)"],
+["变成","biànchéng","berubah menjadi"],
+["变化","biànhuà","perubahan"],
+["表演","biǎoyǎn","pertunjukan, tampil"],
+["别的","biéde","yang lain"],
+["别人","biérén","orang lain"],
+["笔记","bǐjì","catatan"],
+["比较","bǐjiào","membandingkan, relatif"],
+["笔记本","bǐjìběn","laptop, buku catatan"],
+["冰","bīng","es"],
+["冰激凌","bīngjīlíng","es krim"],
+["病人","bìngrén","pasien, orang sakit"],
+["宾馆","bīnguǎn","hotel, penginapan"],
+["冰箱","bīngxiāng","kulkas"],
+["比如","bǐrú","contohnya"],
+["比赛","bǐsài","pertandingan"],
+["必须","bìxū","harus"],
+["不同","bù tóng","berbeda"],
+["不但","búdàn","bukan hanya"],
+["不见","bújiàn","sampai jumpa"],
+["不久","bùjiǔ","tidak lama lagi"],
+["不行","bùxíng","tidak bisa, tidak boleh"],
+["不用","búyòng","tidak perlu"],
+["才","cái","baru saja, baru (menunjukkan sesuatu terjadi terlambat/sedikit)"],
+["菜单","càidān","menu"],
+["参加","cānjiā","mengikuti, berpartisipasi"],
+["草","cǎo","rumput"],
+["草地","cǎodì","lapangan rumput"],
+["层","céng","lantai, lapisan"],
+["查","chá","memeriksa, mencari tahu"],
+["差","chà","kurang, buruk, selisih"],
+["差不多","chàbuduō","hampir, kira-kira sama"],
+["尝","cháng","mencicipi"],
+["常","cháng","sering"],
+["常见","cháng jiàn","umum, biasa terjadi"],
+["常用","cháng yòng","sering digunakan"],
+["常常","chángcháng","sering"],
+["成绩","chéngjì","hasil, nilai, prestasi"],
+["城市","chéngshì","kota"],
+["衬衫","chènshān","kemeja"],
+["迟到","chídào","terlambat"],
+["船","chuán","kapal, perahu"],
+["出发","chūfā","berangkat"],
+["除了","chúle","kecuali, selain"],
+["春天","chūntiān","musim semi"],
+["出生","chūshēng","lahir"],
+["出院","chūyuàn","keluar dari rumah sakit"],
+["初中","chūzhōng","SMP"],
+["词典","cídiǎn","kamus"],
+["聪明","cōngmíng","pintar, cerdas"],
+["大概","dàgài","kira-kira, mungkin"],
+["带","dài","membawa"],
+["蛋糕","dàngāo","kue"],
+["当然","dāngrán","tentu saja"],
+["担心","dānxīn","khawatir"],
+["到处","dàochù","di mana-mana"],
+["大人","dàren","orang dewasa"],
+["打扫","dǎsǎo","membersihkan"],
+["打算","dǎsuàn","berencana"],
+["大小","dàxiǎo","ukuran"],
+["大熊猫","dàxióngmāo","panda besar"],
+["大衣","dàyī","mantel"],
+["得","dé","(partikel kemungkinan)"],
+["得到","dédào","mendapatkan"],
+["得分","défēn","mencetak poin"],
+["的话","dehuà","kalau, jika"],
+["得","děi","harus"],
+["灯","dēng","lampu"],
+["地","dì","tanah, bumi"],
+["电","diàn","listrik"],
+["电梯","diàntī","lift"],
+["电子书","diànzǐshū","buku elektronik"],
+["地点","dìdiǎn","lokasi, tempat"],
+["地方","dìfang","tempat, daerah"],
+["地图","dìtú","peta"],
+["丢","diū","kehilangan, membuang"],
+["东","dōng","timur"],
+["东北","dōngběi","timur laut"],
+["懂得","dǒngde","memahami"],
+["东方","dōngfāng","bagian timur"],
+["东南","dōngnán","tenggara"],
+["冬天","dōngtiān","musim dingin"],
+["动物","dòngwù","hewan"],
+["动物园","dòngwùyuán","kebun binatang"],
+["段","duàn","paragraf, bagian"],
+["短","duǎn","pendek"],
+["短裤","duǎnkù","celana pendek"],
+["锻炼","duànliàn","berolahraga, melatih fisik"],
+["对话","duìhuà","dialog, percakapan"],
+["饿","è","lapar"],
+["耳朵","ěrduo","telinga"],
+["耳机","ěrjī","headphone"],
+["而且","érqiě","dan lagi, terlebih lagi"],
+["发","fā","mengirim, menerbitkan"],
+["放","fàng","meletakkan, melepaskan"],
+["方便","fāngbiàn","nyaman, praktis"],
+["方便面","fāngbiànmiàn","mi instan"],
+["方法","fāngfǎ","metode, cara"],
+["放假","fàngjià","libur"],
+["方向","fāngxiàng","arah"],
+["放心","fàngxīn","tenang, lega"],
+["放学","fàngxué","pulang sekolah"],
+["房子","fángzi","rumah, bangunan"],
+["发烧","fāshāo","demam"],
+["发生","fāshēng","terjadi"],
+["发现","fāxiàn","menemukan"],
+["发展","fāzhǎn","perkembangan, berkembang"],
+["风","fēng","angin"],
+["封","fēng","menyegel, (kata satuan surat)"],
+["分开","fēnkāi","berpisah, memisahkan"],
+["附近","fùjìn","sekitar, dekat"],
+["夫妻","fūqī","pasangan suami istri"],
+["服务","fúwù","pelayanan, melayani"],
+["复习","fùxí","mengulang pelajaran"],
+["该","gāi","seharusnya"],
+["干","gàn","kering; melakukan"],
+["感兴趣","gǎn xìngqù","tertarik"],
+["感到","gǎndào","merasa"],
+["刚","gāng","baru saja"],
+["刚才","gāngcái","barusan"],
+["刚刚","gānggāng","baru saja"],
+["干净","gānjìng","bersih"],
+["感冒","gǎnmào","masuk angin, pilek"],
+["高铁","gāotiě","kereta cepat"],
+["更","gèng","lebih"],
+["根据","gēnjù","berdasarkan"],
+["公斤","gōngjīn","kilogram"],
+["公园","gōngyuán","taman"],
+["工作日","gōngzuòrì","hari kerja"],
+["刮","guā","bertiup (angin), mengikis"],
+["关","guān","menutup, mematikan"],
+["关机","guānjī","mematikan (perangkat)"],
+["关系","guānxì","hubungan"],
+["关心","guānxīn","peduli"],
+["关于","guānyú","tentang"],
+["关注","guānzhù","memperhatikan, mengikuti (berita)"],
+["国家","guójiā","negara"],
+["过节","guòjié","merayakan hari raya"],
+["过去","guòqù","(pelengkap kata kerja: arah melewati)"],
+["故事","gùshi","cerita"],
+["海","hǎi","laut"],
+["害怕","hàipà","takut"],
+["好多","hǎoduō","banyak sekali"],
+["好久","hǎojiǔ","lama sekali"],
+["号码","hàomǎ","nomor"],
+["好像","hǎoxiàng","sepertinya"],
+["河","hé","sungai"],
+["黑板","hēibǎn","papan tulis"],
+["合适","héshì","cocok, sesuai"],
+["红绿灯","hóng-lǜdēng","lampu lalu lintas"],
+["后来","hòulái","kemudian, setelah itu"],
+["后年","hòunián","tahun depan setelah tahun depan"],
+["后天","hòutiān","lusa"],
+["画家","huàjiā","pelukis"],
+["还","huán","mengembalikan"],
+["换","huàn","menukar, mengganti"],
+["黄色","huángsè","warna kuning"],
+["环境","huánjìng","lingkungan"],
+["欢迎","huānyíng","menyambut, selamat datang"],
+["花园","huāyuán","taman bunga"],
+["会","huì","bisa; rapat, perkumpulan"],
+["回答","huídá","menjawab"],
+["会议","huìyì","rapat, pertemuan"],
+["或","huò","atau"],
+["或者","huòzhě","atau"],
+["护照","hùzhào","paspor"],
+["极","jí","sangat, ekstrem"],
+["急","jí","terburu-buru, cemas"],
+["记","jì","mengingat, mencatat"],
+["季","jì","musim"],
+["鸡","jī","ayam"],
+["加","jiā","menambah, plus"],
+["检查","jiǎnchá","memeriksa"],
+["坚持","jiānchí","bertahan, tetap teguh"],
+["简单","jiǎndān","sederhana"],
+["讲","jiǎng","berbicara, menjelaskan"],
+["健康","jiànkāng","sehat"],
+["见面","jiànmiàn","bertemu"],
+["检票","jiǎnpiào","memeriksa tiket"],
+["角","jiǎo","sudut"],
+["脚","jiǎo","kaki"],
+["假期","jiàqī","masa liburan"],
+["节","jié","hari raya, bagian"],
+["借","jiè","meminjam, meminjamkan"],
+["接","jiē","menjemput, menerima"],
+["街","jiē","jalan raya"],
+["结婚","jiéhūn","menikah"],
+["解决","jiějué","menyelesaikan (masalah)"],
+["姐妹","jiěmèi","kakak-adik perempuan"],
+["节目","jiémù","acara (TV/pertunjukan)"],
+["节日","jiérì","hari raya"],
+["结束","jiéshù","berakhir"],
+["几乎","jīhū","hampir"],
+["机会","jīhuì","kesempatan"],
+["季节","jìjié","musim"],
+["斤","jīn","satuan berat (0,5 kg)"],
+["经过","jīngguò","melalui, melewati"],
+["经理","jīnglǐ","manajer"],
+["旧","jiù","lama, bekas"],
+["久","jiǔ","lama (waktu)"],
+["酒","jiǔ","minuman keras"],
+["句","jù","kalimat"],
+["决定","juédìng","memutuskan, keputusan"],
+["句子","jùzi","kalimat"],
+["卡","kǎ","kartu; tersangkut"],
+["开花","kāihuā","berbunga, mekar"],
+["开会","kāihuì","mengadakan rapat"],
+["开机","kāijī","menyalakan (perangkat)"],
+["开心","kāixīn","senang, gembira"],
+["看来","kànlái","kelihatannya"],
+["刻","kè","seperempat jam; mengukir"],
+["可","kě","tetapi, namun"],
+["渴","kě","haus"],
+["可爱","kě'ài","lucu, menggemaskan"],
+["课本","kèběn","buku pelajaran"],
+["客人","kèrén","tamu"],
+["可是","kěshì","tetapi"],
+["课文","kèwén","teks pelajaran"],
+["空调","kōngtiáo","AC"],
+["哭","kū","menangis"],
+["筷子","kuàizi","sumpit"],
+["矿泉水","kuàngquánshuǐ","air mineral"],
+["来自","láizì","berasal dari"],
+["蓝","lán","biru"],
+["老","lǎo","tua; selalu"],
+["老人","lǎorén","orang tua, lansia"],
+["练","liàn","berlatih"],
+["脸","liǎn","wajah"],
+["辆","liàng","(kata satuan untuk kendaraan)"],
+["凉快","liángkuai","sejuk (cuaca)"],
+["练习","liànxí","latihan, berlatih"],
+["聊","liáo","mengobrol"],
+["了解","liǎojiě","memahami, mengetahui"],
+["聊天儿","liáotiānr","mengobrol"],
+["离开","líkāi","meninggalkan, pergi"],
+["邻居","línjū","tetangga"],
+["历史","lìshǐ","sejarah"],
+["留学","liúxué","belajar di luar negeri"],
+["留学生","liúxuéshēng","mahasiswa internasional"],
+["礼物","lǐwù","hadiah"],
+["楼梯","lóutī","tangga"],
+["路边","lùbiān","pinggir jalan"],
+["路口","lùkǒu","persimpangan jalan"],
+["马","mǎ","kuda"],
+["马路","mǎlù","jalan raya"],
+["满意","mǎnyì","puas"],
+["毛","máo","bulu; satuan mata uang (mao)"],
+["马上","mǎshàng","segera"],
+["米","mǐ","meter; beras"],
+["面前","miànqián","di depan, di hadapan"],
+["明白","míngbai","mengerti, jelas"],
+["名单","míngdān","daftar nama"],
+["名人","míngrén","orang terkenal"],
+["南","nán","selatan"],
+["难","nán","sulit"],
+["南方","nánfāng","bagian selatan"],
+["难过","nánguò","sedih"],
+["难看","nánkàn","jelek, tidak sedap dipandang"],
+["男人","nánrén","pria"],
+["男生","nánshēng","murid laki-laki"],
+["难题","nántí","masalah sulit"],
+["难听","nántīng","tidak enak didengar"],
+["年级","niánjí","tingkat kelas"],
+["年轻","niánqīng","muda"],
+["牛","niú","sapi"],
+["努力","nǔlì","berusaha keras"],
+["女人","nǚrén","wanita"],
+["女生","nǚshēng","murid perempuan"],
+["爬","pá","memanjat"],
+["怕","pà","takut"],
+["拍照","pāizhào","memotret"],
+["胖","pàng","gemuk"],
+["盘子","pánzi","piring"],
+["啤酒","píjiǔ","bir"],
+["平时","píngshí","biasanya"],
+["瓶子","píngzi","botol"],
+["骑","qí","mengendarai (sepeda/kuda)"],
+["起","qǐ","bangkit, mulai"],
+["铅笔","qiānbǐ","pensil"],
+["前年","qiánnián","tahun sebelum tahun lalu"],
+["前天","qiántiān","kemarin lusa"],
+["汽车","qìchē","mobil"],
+["起飞","qǐfēi","lepas landas (pesawat)"],
+["奇怪","qíguài","aneh"],
+["清楚","qīngchu","jelas"],
+["请假","qǐngjià","izin cuti"],
+["请客","qǐngkè","mentraktir"],
+["其实","qíshí","sebenarnya"],
+["其他","qítā","yang lain"],
+["球场","qiúchǎng","lapangan bola"],
+["秋天","qiūtiān","musim gugur"],
+["裙子","qúnzi","rok"],
+["然后","ránhòu","kemudian, lalu"],
+["认得","rènde","mengenali"],
+["认为","rènwéi","menganggap, berpikir"],
+["认真","rènzhēn","serius, sungguh-sungguh"],
+["热情","rèqíng","ramah, antusias"],
+["容易","róngyì","mudah"],
+["如果","rúguǒ","jika"],
+["伞","sǎn","payung"],
+["扫","sǎo","menyapu"],
+["沙发","shāfā","sofa"],
+["山","shān","gunung"],
+["上衣","shàngyī","baju atasan"],
+["勺子","sháozi","sendok"],
+["身边","shēnbiān","di sisi, di dekat"],
+["声","shēng","suara"],
+["身高","shēngāo","tinggi badan"],
+["生活","shēnghuó","kehidupan"],
+["生气","shēngqì","marah"],
+["声音","shēngyīn","suara"],
+["市","shì","kota"],
+["试","shì","mencoba"],
+["室","shì","ruangan"],
+["世界","shìjiè","dunia"],
+["受","shòu","menerima, mengalami"],
+["瘦","shòu","kurus"],
+["收","shōu","menerima, mengumpulkan"],
+["受到","shòudào","menerima, mengalami"],
+["收到","shōudào","menerima"],
+["树","shù","pohon"],
+["刷","shuā","menyikat, menggosok"],
+["双","shuāng","sepasang"],
+["水平","shuǐpíng","tingkat, standar"],
+["叔叔","shūshu","paman"],
+["数学","shùxué","matematika"],
+["四季","sìjì","empat musim"],
+["司机","sījī","sopir"],
+["太阳","tàiyáng","matahari"],
+["糖","táng","gula, permen"],
+["特别","tèbié","khusus, terutama"],
+["甜","tián","manis"],
+["跳","tiào","melompat"],
+["提高","tígāo","meningkatkan"],
+["挺","tǐng","cukup, lumayan"],
+["听说","tīngshuō","dengar-dengar, konon"],
+["体育","tǐyù","olahraga (pelajaran)"],
+["体育馆","tǐyùguǎn","gedung olahraga"],
+["同事","tóngshì","rekan kerja"],
+["同意","tóngyì","setuju"],
+["头发","tóufa","rambut"],
+["腿","tuǐ","kaki (tungkai)"],
+["突然","tūrán","tiba-tiba"],
+["图书馆","túshūguǎn","perpustakaan"],
+["外地","wàidì","daerah lain"],
+["外卖","wàimài","makanan pesan-antar"],
+["外语","wàiyǔ","bahasa asing"],
+["碗","wǎn","mangkuk"],
+["完成","wánchéng","menyelesaikan"],
+["晚点","wǎndiǎn","terlambat (transportasi)"],
+["忘记","wàngjì","lupa"],
+["网球","wǎngqiú","tenis"],
+["网站","wǎngzhàn","situs web"],
+["晚会","wǎnhuì","pesta malam"],
+["为","wèi","untuk, karena"],
+["为了","wèile","demi, untuk"],
+["卫生间","wèishēngjiān","kamar mandi, toilet"],
+["文化","wénhuà","budaya"],
+["屋子","wūzi","ruangan, kamar"],
+["西","xī","barat"],
+["喜爱","xǐ'ài","menyukai"],
+["先","xiān","lebih dahulu"],
+["向","xiàng","ke arah"],
+["像","xiàng","mirip seperti"],
+["相机","xiàngjī","kamera"],
+["香蕉","xiāngjiāo","pisang"],
+["相信","xiāngxìn","percaya"],
+["箱子","xiāngzi","kotak, koper"],
+["小区","xiǎoqū","kompleks perumahan"],
+["小心","xiǎoxīn","hati-hati"],
+["校园","xiàoyuán","kampus, area sekolah"],
+["校长","xiàozhǎng","kepala sekolah"],
+["夏天","xiàtiān","musim panas"],
+["西北","xīběi","barat laut"],
+["鞋","xié","sepatu"],
+["西方","xīfāng","bagian barat"],
+["西瓜","xīguā","semangka"],
+["习惯","xíguàn","kebiasaan"],
+["信","xìn","surat; percaya"],
+["西南","xīnán","barat daya"],
+["行","xíng","boleh, oke"],
+["行李","xíngli","bagasi, koper"],
+["兴趣","xìngqù","minat, ketertarikan"],
+["心里","xīnlǐ","di dalam hati"],
+["新年","xīnnián","tahun baru"],
+["新闻","xīnwén","berita"],
+["新鲜","xīnxiān","segar"],
+["信用卡","xìnyòngkǎ","kartu kredit"],
+["休假","xiūjià","cuti liburan"],
+["洗衣机","xǐyījī","mesin cuci"],
+["洗澡","xǐzǎo","mandi"],
+["选","xuǎn","memilih"],
+["选择","xuǎnzé","pilihan, memilih"],
+["学期","xuéqī","semester"],
+["需要","xūyào","membutuhkan"],
+["牙","yá","gigi"],
+["羊","yáng","domba"],
+["养","yǎng","memelihara"],
+["要求","yāoqiú","permintaan, menuntut"],
+["牙刷","yáshuā","sikat gigi"],
+["页","yè","halaman"],
+["一般","yìbān","umum, biasa"],
+["一边","yìbiān","sambil"],
+["一定","yídìng","pasti"],
+["一共","yígòng","total, semuanya"],
+["以后","yǐhòu","setelah, nanti"],
+["一块儿","yíkuàir","bersama-sama"],
+["应该","yīnggāi","seharusnya"],
+["影响","yǐngxiǎng","pengaruh, mempengaruhi"],
+["银行","yínháng","bank"],
+["银行卡","yínhángkǎ","kartu bank"],
+["饮料","yǐnliào","minuman"],
+["音乐","yīnyuè","musik"],
+["以前","yǐqián","sebelumnya"],
+["以上","yǐshàng","di atas, lebih dari"],
+["以外","yǐwài","selain itu, di luar"],
+["以为","yǐwéi","mengira (keliru)"],
+["以下","yǐxià","di bawah, kurang dari"],
+["一样","yíyàng","sama"],
+["一直","yìzhí","selalu, terus-menerus"],
+["用","yòng","menggunakan"],
+["又","yòu","lagi, juga"],
+["有关","yǒuguān","berkaitan dengan"],
+["邮件","yóujiàn","surat, email"],
+["游客","yóukè","wisatawan"],
+["有名","yǒumíng","terkenal"],
+["游戏","yóuxì","permainan"],
+["邮箱","yóuxiāng","kotak surat, email"],
+["有用","yǒuyòng","berguna"],
+["园","yuán","taman"],
+["员","yuán","anggota, pegawai"],
+["愿意","yuànyì","bersedia"],
+["遇到","yùdào","bertemu, mengalami"],
+["越","yuè","semakin"],
+["月亮","yuèliang","bulan (langit)"],
+["遇见","yùjiàn","bertemu"],
+["羽毛球","yǔmáoqiú","bulu tangkis"],
+["运动会","yùndònghuì","pesta olahraga"],
+["运动员","yùndòngyuán","atlet"],
+["语言","yǔyán","bahasa"],
+["雨衣","yǔyī","jas hujan"],
+["脏","zāng","kotor"],
+["咱们","zánmen","kita"],
+["怎么办","zěnmebàn","bagaimana caranya, harus bagaimana"],
+["怎样","zěnyàng","bagaimana"],
+["站","zhàn","(kata satuan stasiun/halte)"],
+["长","zhǎng","tumbuh, bertambah"],
+["张","zhāng","(kata satuan benda pipih)"],
+["照","zhào","menyinari, menurut"],
+["照顾","zhàogù","merawat, mengurus"],
+["着急","zháojí","cemas, khawatir"],
+["照片","zhàopiàn","foto"],
+["照相","zhàoxiàng","memotret"],
+["只","zhǐ","hanya"],
+["纸","zhǐ","kertas"],
+["只能","zhǐ néng","hanya bisa"],
+["直到","zhídào","sampai"],
+["只是","zhǐshì","hanya saja"],
+["只要","zhǐyào","asalkan"],
+["只有","zhǐyǒu","hanya jika"],
+["种","zhǒng","jenis, macam"],
+["中","zhōng","(pelengkap kata kerja: tepat kena)"],
+["中间","zhōngjiān","tengah"],
+["重要","zhòngyào","penting"],
+["终于","zhōngyú","akhirnya"],
+["周末","zhōumò","akhir pekan"],
+["主要","zhǔyào","utama"],
+["注意","zhùyì","memperhatikan"],
+["住院","zhùyuàn","dirawat di rumah sakit"],
+["子","zi","anak, biji"],
+["字典","zìdiǎn","kamus (aksara)"],
+["自行车","zìxíngchē","sepeda"],
+["总","zǒng","selalu, umum"],
+["总是","zǒngshì","selalu"],
+["嘴","zuǐ","mulut"],
+["最好","zuìhǎo","paling baik"],
+["最后","zuìhòu","terakhir"],
+["最近","zuìjìn","baru-baru ini"],
+["做客","zuòkè","bertamu"],
+["作业","zuòyè","pekerjaan rumah, tugas"]
+];
+
+let currentLevelKey = 'hsk1';
+let WORDS = WORDS_HSK1;
+
+let order = WORDS.map((_, i) => i);
+let pos = 0;
+let attempted = 0;
+let correctCount = 0;
+let checkedThisCard = false;
+
+const hanziDisplay = document.getElementById('hanziDisplay');
+const pinyinInput = document.getElementById('pinyinInput');
+const meaningInput = document.getElementById('meaningInput');
+const pinyinReveal = document.getElementById('pinyinReveal');
+const meaningReveal = document.getElementById('meaningReveal');
+const trackFill = document.getElementById('trackFill');
+const trackCount = document.getElementById('trackCount');
+const scoreStamp = document.getElementById('scoreStamp');
+const scoreText = document.getElementById('scoreText');
+const feedbackBanner = document.getElementById('feedbackBanner');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+const checkBtn = document.getElementById('checkBtn');
+
+const TONE_MAP = {
+  'ā':'a','á':'a','ǎ':'a','à':'a',
+  'ē':'e','é':'e','ě':'e','è':'e',
+  'ī':'i','í':'i','ǐ':'i','ì':'i',
+  'ō':'o','ó':'o','ǒ':'o','ò':'o',
+  'ū':'u','ú':'u','ǔ':'u','ù':'u',
+  'ǖ':'v','ǘ':'v','ǚ':'v','ǜ':'v','ü':'v'
+};
+
+function normalizePinyin(s){
+  return s.toLowerCase()
+    .split('').map(ch => TONE_MAP[ch] || ch).join('')
+    .replace(/[0-9]/g,'')
+    .replace(/[^a-z']/g,'')
+    .trim();
+}
+
+function normalizeMeaning(s){
+  return s.toLowerCase()
+    .replace(/[.,!?;:()]/g,'')
+    .split(/[\/,，、]+/)
+    .map(p => p.trim())
+    .filter(Boolean);
+}
+
+function loadCard(){
+  const word = WORDS[order[pos]];
+  hanziDisplay.textContent = word[0];
+  pinyinInput.value = '';
+  meaningInput.value = '';
+  pinyinInput.classList.remove('correct','wrong');
+  meaningInput.classList.remove('correct','wrong');
+  pinyinReveal.innerHTML = '&nbsp;';
+  meaningReveal.innerHTML = '&nbsp;';
+  checkedThisCard = false;
+  feedbackBanner.classList.remove('show','ok','bad');
+  updateTrack();
+  prevBtn.disabled = pos === 0;
+  pinyinInput.focus();
+}
+
+function updateTrack(){
+  trackCount.textContent = `${pos+1} / ${WORDS.length}`;
+  trackFill.style.width = `${((pos)/(WORDS.length-1))*100}%`;
+}
+
+function updateScore(){
+  scoreStamp.textContent = correctCount;
+  scoreText.textContent = `benar dari ${attempted} dicoba`;
+}
+
+function showFeedback(isOk){
+  feedbackBanner.textContent = isOk ? '正确 · Benar!' : '再试试 · Kurang tepat';
+  feedbackBanner.classList.remove('ok','bad');
+  feedbackBanner.classList.add(isOk ? 'ok' : 'bad', 'show');
+  setTimeout(() => feedbackBanner.classList.remove('show'), 1400);
+}
+
+function checkAnswer(){
+  if (checkedThisCard) { goNext(); return; }
+  const word = WORDS[order[pos]];
+  const correctPinyin = normalizePinyin(word[1]);
+  const userPinyin = normalizePinyin(pinyinInput.value);
+  const pinyinOk = userPinyin.length > 0 && userPinyin === correctPinyin;
+
+  const correctMeanings = normalizeMeaning(word[2]);
+  const userMeaning = normalizeMeaning(meaningInput.value)[0] || '';
+  const meaningOk = userMeaning.length > 0 && correctMeanings.some(m =>
+    m.includes(userMeaning) || userMeaning.includes(m)
+  );
+
+  pinyinInput.classList.toggle('correct', pinyinOk);
+  pinyinInput.classList.toggle('wrong', !pinyinOk);
+  meaningInput.classList.toggle('correct', meaningOk);
+  meaningInput.classList.toggle('wrong', !meaningOk);
+
+  pinyinReveal.innerHTML = `pinyin: <b>${word[1]}</b>`;
+  meaningReveal.innerHTML = `arti: <b>${word[2]}</b>`;
+
+  attempted++;
+  if (pinyinOk && meaningOk) correctCount++;
+  updateScore();
+  showFeedback(pinyinOk && meaningOk);
+
+  checkedThisCard = true;
+  checkBtn.textContent = 'Lanjut →';
+}
+
+function goNext(){
+  pos = (pos + 1) % WORDS.length;
+  checkBtn.textContent = 'Periksa Jawaban';
+  loadCard();
+}
+
+function goPrev(){
+  if (pos === 0) return;
+  pos -= 1;
+  checkBtn.textContent = 'Periksa Jawaban';
+  loadCard();
+}
+
+function shuffleDeck(){
+  for (let i = order.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i+1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  pos = 0;
+  checkBtn.textContent = 'Periksa Jawaban';
+  loadCard();
+}
+
+function resetAll(){
+  order = WORDS.map((_, i) => i);
+  pos = 0;
+  attempted = 0;
+  correctCount = 0;
+  checkBtn.textContent = 'Periksa Jawaban';
+  updateScore();
+  loadCard();
+}
+
+checkBtn.addEventListener('click', checkAnswer);
+nextBtn.addEventListener('click', goNext);
+prevBtn.addEventListener('click', goPrev);
+document.getElementById('shuffleBtn').addEventListener('click', shuffleDeck);
+document.getElementById('resetBtn').addEventListener('click', resetAll);
+
+[pinyinInput, meaningInput].forEach(inp => {
+  inp.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter'){
+      e.preventDefault();
+      checkAnswer();
+    }
+  });
+});
+
+updateScore();
+loadCard();
+
+/* ================= PEMILIH LEVEL (HSK 1 / HSK 2) ================= */
+const levelLabel = document.getElementById('levelLabel');
+
+function updateLevelLabel(){
+  const suffix = currentLevelKey === 'hsk2' ? ' (HSK 2)' : currentLevelKey === 'hsk3' ? ' (HSK 3)' : '';
+  levelLabel.textContent = `${WORDS.length} KATA${suffix}`;
+}
+updateLevelLabel();
+
+function switchLevel(level){
+  if (level === currentLevelKey) return;
+  currentLevelKey = level;
+  WORDS = level === 'hsk2' ? WORDS_HSK2 : level === 'hsk3' ? WORDS_HSK3 : WORDS_HSK1;
+
+  document.querySelectorAll('.level-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.level === level);
+  });
+  updateLevelLabel();
+
+  // reset progres mode Latihan
+  order = WORDS.map((_, i) => i);
+  pos = 0;
+  attempted = 0;
+  correctCount = 0;
+  checkBtn.textContent = 'Periksa Jawaban';
+  updateScore();
+  loadCard();
+
+  // reset mode Kamus Hafalan (kalau sudah pernah dibuka)
+  dictIdx = 0;
+  if (typeof dictSearch !== 'undefined') dictSearch.value = '';
+  if (dictInitialized){
+    buildDictGrid();
+    loadDictDetail(0);
+  }
+}
+
+document.querySelectorAll('.level-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchLevel(btn.dataset.level));
+});
+
+/* ================= MODE TABS ================= */
+const tabQuiz = document.getElementById('tabQuiz');
+const tabDict = document.getElementById('tabDict');
+const quizView = document.getElementById('quizView');
+const dictView = document.getElementById('dictView');
+let dictInitialized = false;
+
+function switchMode(mode){
+  const toDict = mode === 'dict';
+  quizView.style.display = toDict ? 'none' : '';
+  dictView.style.display = toDict ? '' : 'none';
+  tabQuiz.classList.toggle('active', !toDict);
+  tabDict.classList.toggle('active', toDict);
+  if (toDict && !dictInitialized){
+    dictInitialized = true;
+    buildDictGrid();
+    loadDictDetail(0);
+  }
+}
+tabQuiz.addEventListener('click', () => switchMode('quiz'));
+tabDict.addEventListener('click', () => switchMode('dict'));
+
+/* ================= KAMUS HAFALAN ================= */
+let dictIdx = 0;
+let dictWriters = [];
+
+const dictHanzi = document.getElementById('dictHanzi');
+const dictPinyin = document.getElementById('dictPinyin');
+const dictMeaning = document.getElementById('dictMeaning');
+const dictIndexEl = document.getElementById('dictIndex');
+const dictGrid = document.getElementById('dictGrid');
+const dictCount = document.getElementById('dictCount');
+const dictSearch = document.getElementById('dictSearch');
+const writerRow = document.getElementById('writerRow');
+
+function buildDictGrid(filterIndices){
+  const indices = filterIndices || WORDS.map((_, i) => i);
+  dictGrid.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  indices.forEach(i => {
+    const w = WORDS[i];
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'dict-tile' + (i === dictIdx ? ' active' : '');
+    btn.dataset.idx = String(i);
+    btn.innerHTML = `<span class="tile-hanzi">${w[0]}</span><span class="tile-pinyin">${w[1]}</span>`;
+    btn.addEventListener('click', () => loadDictDetail(i));
+    frag.appendChild(btn);
+  });
+  dictGrid.appendChild(frag);
+  dictCount.textContent = `${indices.length} kata`;
+}
+
+function sizeDictHanzi(word){
+  const len = Array.from(word).length;
+  let size;
+  if (len <= 1) size = 84;
+  else if (len === 2) size = 62;
+  else if (len === 3) size = 46;
+  else size = 36;
+  dictHanzi.style.fontSize = size + 'px';
+}
+
+function loadDictDetail(i){
+  dictIdx = i;
+  const w = WORDS[i];
+  dictHanzi.textContent = w[0];
+  sizeDictHanzi(w[0]);
+  dictPinyin.textContent = w[1];
+  dictMeaning.textContent = w[2];
+  dictIndexEl.textContent = `Kata ${i + 1} dari ${WORDS.length}`;
+  Array.from(dictGrid.children).forEach(tile => {
+    tile.classList.toggle('active', Number(tile.dataset.idx) === i);
+  });
+  renderWriters(w[0]);
+}
+
+function renderWriters(word){
+  writerRow.innerHTML = '';
+  dictWriters = [];
+  const chars = Array.from(word).filter(c => /[\u4e00-\u9fff]/.test(c));
+  if (chars.length === 0 || !window.HanziWriter){
+    writerRow.innerHTML = '<div class="writer-empty">Animasi tidak tersedia untuk simbol ini.</div>';
+    return;
+  }
+  chars.forEach((ch, idx) => {
+    const holder = document.createElement('div');
+    holder.className = 'writer-target';
+    holder.id = 'writerTarget' + idx;
+    writerRow.appendChild(holder);
+    try{
+      const writer = HanziWriter.create(holder.id, ch, {
+        width: 90, height: 90, padding: 6,
+        strokeColor: '#201D18',
+        radicalColor: '#AE3428',
+        outlineColor: 'rgba(32,29,24,0.15)',
+        showOutline: true,
+        showCharacter: false,
+        strokeAnimationSpeed: 1,
+        delayBetweenStrokes: 180
+      });
+      dictWriters.push(writer);
+      setTimeout(() => writer.animateCharacter(), idx * 700 + 150);
+    }catch(e){
+      console.warn('Gagal memuat animasi untuk', ch, e);
+    }
+  });
+}
+
+function replayWriters(){
+  dictWriters.forEach((w, idx) => {
+    setTimeout(() => {
+      w.hideCharacter();
+      w.animateCharacter();
+    }, idx * 700);
+  });
+}
+
+function speakWord(text){
+  if (!('speechSynthesis' in window)){
+    alert('Browser ini tidak mendukung suara (Web Speech API).');
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'zh-CN';
+  utter.rate = 0.85;
+  window.speechSynthesis.speak(utter);
+}
+
+document.getElementById('replayWriteBtn').addEventListener('click', replayWriters);
+document.getElementById('dictSpeakBtn').addEventListener('click', () => speakWord(WORDS[dictIdx][0]));
+document.getElementById('dictNextBtn').addEventListener('click', () => loadDictDetail((dictIdx + 1) % WORDS.length));
+document.getElementById('dictPrevBtn').addEventListener('click', () => loadDictDetail((dictIdx - 1 + WORDS.length) % WORDS.length));
+
+dictSearch.addEventListener('input', (e) => {
+  const q = e.target.value.trim().toLowerCase();
+  if (!q){ buildDictGrid(); return; }
+  const filtered = WORDS
+    .map((_, i) => i)
+    .filter(i => {
+      const w = WORDS[i];
+      return w[0].includes(q) || w[1].toLowerCase().includes(q) || w[2].toLowerCase().includes(q);
+    });
+  buildDictGrid(filtered);
+});
+</script>
+</body>
+</html>
