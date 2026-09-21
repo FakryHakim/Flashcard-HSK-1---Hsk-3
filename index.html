@@ -365,11 +365,11 @@
   </div>
 
   <div class="mode-tabs">
-    <button class="tab-btn active" id="tabQuiz" type="button"><span class="tab-glyph">练</span> Latihan</button>
-    <button class="tab-btn" id="tabDict" type="button"><span class="tab-glyph">典</span> Kamus Hafalan</button>
+    <button class="tab-btn active" id="tabDict" type="button"><span class="tab-glyph">典</span> Kamus Hafalan</button>
+    <button class="tab-btn" id="tabQuiz" type="button"><span class="tab-glyph">练</span> Latihan</button>
   </div>
 
-  <div id="quizView">
+  <div id="quizView" style="display:none;">
   <div class="scroll-track">
     <div class="rod"></div>
     <div class="track-line"><div class="track-fill" id="trackFill"></div></div>
@@ -422,7 +422,7 @@
   </footer>
   </div>
 
-  <div id="dictView" style="display:none;">
+  <div id="dictView">
     <div class="dict-detail card">
       <div class="dict-detail-top">
         <div class="dict-hanzi-block">
@@ -1824,6 +1824,11 @@ dictSearch.addEventListener('input', (e) => {
     });
   buildDictGrid(filtered);
 });
+
+// Kamus Hafalan adalah tampilan default saat halaman pertama dibuka
+dictInitialized = true;
+buildDictGrid();
+loadDictDetail(0);
 </script>
 </body>
 </html>
